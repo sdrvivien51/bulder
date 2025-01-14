@@ -58,12 +58,12 @@ export default async function BlogPost({ params }: BlogPostProps) {
   // - Exclure l'article courant
   // - Limiter à 3 articles
   const relatedPosts = allPosts
-    .filter(relatedPost => 
+    .filter((relatedPost: any) => 
       relatedPost.slug !== params.slug && // Exclure l'article courant
       relatedPost.category === post.category // Même catégorie
     )
     .slice(0, 3) // Limiter à 3 articles
-    .map(relatedPost => ({
+    .map((relatedPost: any) => ({
       slug: relatedPost.slug,
       title: relatedPost.title,
       excerpt: relatedPost.content.substring(0, 150).replace(/<[^>]*>/g, '') + '...', // Extraire un court extrait du contenu HTML
