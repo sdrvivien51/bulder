@@ -2,13 +2,10 @@ import { getToolBySlug } from "@/utils/nocodb"
 import ToolReviewHeader from "@/components/ToolReview/ToolReviewHeader"
 import ToolReviewContent from "@/components/ToolReview/ToolReviewContent"
 import ToolReviewGallery from "@/components/ToolReview/ToolReviewGallery"
-import ToolReviewVideo from "@/components/ToolReview/ToolReviewVideo"
-import ToolReviewComment from "@/components/ToolReview/ToolReviewComment"
 import AlternativeTools from "@/components/ToolReview/AlternativeTools"
 import { notFound } from "next/navigation"
 import { Metadata } from "next"
 import ToolReviewFAQ from "@/components/ToolReview/ToolReviewFAQ"
-import { BoxReveal } from "@/components/magicui/box-reveal";
 import { OrbitingCircles } from "@/components/magicui/orbiting-circles";
 
 interface FAQItem {
@@ -19,6 +16,11 @@ interface FAQItem {
 interface RawFAQItem {
   question: string;
   answer: string;
+}
+
+interface Tool {
+  // ... other properties ...
+  source_url?: string[]; // or the appropriate type
 }
 
 const mockComments = [
@@ -51,13 +53,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
     return {
       title: tool.name,
-      tagline: tool.tagline,
+      description: tool.tagline,
     }
   } catch (error) {
     console.error('Error generating metadata:', error);
     return {
       title: "Erreur",
-      tagline: "Une erreur s'est produite lors du chargement de l'outil."
+      description: "Une erreur s'est produite lors du chargement de l'outil."
     }
   }
 }
@@ -69,7 +71,7 @@ async function getAlternativeTools(currentToolId: string, category: string) {
     const allTools = await getTools();
     return allTools
       .filter(tool => 
-        tool.Id !== currentToolId && 
+        tool.Id.toString() !== currentToolId && 
         tool.categories.toLowerCase().includes(category.toLowerCase())
       )
       .slice(0, 3);
@@ -101,11 +103,10 @@ export default async function ToolPage({ params }: { params: { slug: string } })
       console.error('Missing required tool data:', { categories: tool.categories, id: tool.Id });
       throw new Error('Tool data is incomplete');
     }
-
     // Récupération des alternatives avec gestion d'erreur
-    let alternativeTools = [];
+    let alternativeTools: Array<any> = [];
     try {
-      alternativeTools = await getAlternativeTools(tool.Id, tool.categories);
+      alternativeTools = await getAlternativeTools(tool.Id.toString(), tool.categories);
       console.log('Alternative tools found:', alternativeTools.length);
     } catch (alternativesError) {
       console.error('Error fetching alternatives:', alternativesError);
@@ -167,13 +168,6 @@ export default async function ToolPage({ params }: { params: { slug: string } })
                   <h2 className="text-2xl font-bold mb-4">Aucune FAQ disponible</h2>
                 </div>
               )}
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold">Commentaires</h2>
-                <ToolReviewComment 
-                  comments={tool.comments || []} 
-                  toolId={tool.Id} 
-                />
-              </div>
             </div>
           </div>
           <div className="lg:col-span-1 pr-0 sm:pr-4 lg:pr-6">

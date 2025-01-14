@@ -3,7 +3,7 @@
 import { CheckCircle, XCircle } from 'lucide-react';
 import { Card } from '../ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import ToolReviewVideo from './ToolReviewVideo';
+import ToolReviewVideo from '@/components/ToolReview/ToolReviewVideo';
 
 interface ToolReviewContentProps {
   description: string;
@@ -46,6 +46,8 @@ export default function ToolReviewContent({
     return { __html: formattedContent };
   };
 
+  console.log('Tool videos:', videos);
+
   return (
     <div className="space-y-8">
       {/* Tabs pour la description et les vidéos */}
@@ -65,7 +67,7 @@ export default function ToolReviewContent({
         {videos.length > 0 && (
           <TabsContent value="videos">
             <div className="space-y-4">
-              {videos.map((video, index) => (
+              {videos.map((video: string, index: number) => (
                 <ToolReviewVideo key={index} videoUrl={video} />
               ))}
             </div>

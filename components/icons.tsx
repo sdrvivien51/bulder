@@ -1,7 +1,7 @@
 import {
   Brain,
   Code,
-  Robot,
+  Bot,
   Sparkles,
   Wand2,
   Search,
@@ -11,7 +11,7 @@ import {
 export const Icons = {
   brain: Brain,
   code: Code,
-  robot: Robot,
+  Bot: Bot,
   sparkles: Sparkles,
   magic: Wand2,
   search: Search,

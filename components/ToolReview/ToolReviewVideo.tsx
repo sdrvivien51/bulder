@@ -1,31 +1,26 @@
-"use client"
+import React from 'react';
 
 interface ToolReviewVideoProps {
   videoUrl: string;
 }
 
-export default function ToolReviewVideo({ videoUrl }: ToolReviewVideoProps) {
-  // Fonction pour extraire l'ID de la vidéo YouTube
-  const getYouTubeVideoId = (url: string) => {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    return match && match[2].length === 11 ? match[2] : null;
-  };
-
-  const videoId = getYouTubeVideoId(videoUrl);
-
-  if (!videoId) {
-    return null;
-  }
+const ToolReviewVideo: React.FC<ToolReviewVideoProps> = ({ videoUrl }) => {
+  // Transform the URL into an embed URL if necessary
+  const embedUrl = videoUrl.replace('watch?v=', 'embed/');
 
   return (
-    <div className="relative aspect-video w-full">
+    <div className="video-container" style={{ borderRadius: '8px', overflow: 'hidden' }}>
       <iframe
-        src={`https://www.youtube.com/embed/${videoId}`}
-        className="absolute inset-0 w-full h-full rounded-lg"
+        width="560"
+        height="315"
+        src={embedUrl}
+        title="Video Review"
+        frameBorder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
-      />
+      ></iframe>
     </div>
   );
-} 
+};
+
+export default ToolReviewVideo;
