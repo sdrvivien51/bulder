@@ -6,7 +6,6 @@ import AlternativeTools from "@/components/ToolReview/AlternativeTools"
 import { notFound } from "next/navigation"
 import { Metadata } from "next"
 import ToolReviewFAQ from "@/components/ToolReview/ToolReviewFAQ"
-import { OrbitingCircles } from "@/components/magicui/orbiting-circles";
 
 interface FAQItem {
   question: string;
@@ -18,27 +17,6 @@ interface RawFAQItem {
   answer: string;
 }
 
-interface Tool {
-  // ... other properties ...
-  source_url?: string[]; // or the appropriate type
-}
-
-const mockComments = [
-  {
-    id: 1,
-    author: "John Doe",
-    content: "Un excellent outil que j'utilise quotidiennement !",
-    createdAt: "2024-03-20",
-    rating: 5
-  },
-  {
-    id: 2,
-    author: "Jane Smith",
-    content: "Très utile pour l'automatisation de mes tâches.",
-    createdAt: "2024-03-19",
-    rating: 4
-  }
-];
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   try {
@@ -104,7 +82,7 @@ export default async function ToolPage({ params }: { params: { slug: string } })
       throw new Error('Tool data is incomplete');
     }
     // Récupération des alternatives avec gestion d'erreur
-    let alternativeTools: Array<any> = [];
+    let alternativeTools: Array<Tool> = [];
     try {
       alternativeTools = await getAlternativeTools(tool.Id.toString(), tool.categories);
       console.log('Alternative tools found:', alternativeTools.length);

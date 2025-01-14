@@ -6,11 +6,11 @@ export default function NotFound() {
     <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
       <h2 className="text-2xl font-bold">Outil non trouvé</h2>
       <p className="text-gray-600">
-        Désolé, l'outil que vous recherchez n'existe pas ou a été supprimé.
+        Désolé, l&apos;outil que vous recherchez n&apos;existe pas ou a été supprimé.
       </p>
       <Button asChild>
         <Link href="/">
-          Retour à l'accueil
+          Retour à l&apos;accueil
         </Link>
       </Button>
     </div>

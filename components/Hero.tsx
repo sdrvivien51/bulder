@@ -18,10 +18,10 @@ export default function Hero() {
       <div className="max-w-3xl mx-auto text-center space-y-8">
         <div className="space-y-4">
           <h1 className="text-4xl font-bold tracking-tight sm:text-6xl bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-blue-500">
-            Trouve l'outil pour ta stack
+            Trouve l&apos;outil pour ta stack
           </h1>
           <p className="text-xl text-muted-foreground">
-            Découvre et compare les meilleurs outils d'IA et no-code pour automatiser ton workflow
+            Découvre et compare les meilleurs outils d&apos;IA et no-code pour automatiser ton workflow
           </p>
         </div>
 
@@ -35,7 +35,7 @@ export default function Hero() {
             required
           />
           <Button type="submit">
-            S'inscrire
+            S&apos;inscrire
           </Button>
         </form>
       </div>

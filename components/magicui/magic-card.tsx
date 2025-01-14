@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { motion, useMotionTemplate, useSpring } from "framer-motion";
+import { useMotionTemplate, useSpring } from "framer-motion";
 
 interface MagicCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;

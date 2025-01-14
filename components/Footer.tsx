@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { Separator } from "@/components/ui/separator"
 
 const footerLinks = [
   {
@@ -38,7 +37,7 @@ export default function Footer() {
               <span className="text-xl font-bold">OpenAutoma</span>
             </Link>
             <p className="mt-2 text-sm text-muted-foreground">
-              Découvrez les meilleurs outils d'IA et solutions no-code pour automatiser votre travail.
+              Découvrez les meilleurs outils d&apos;IA et solutions no-code pour automatiser ton travail.
             </p>
           </div>
           

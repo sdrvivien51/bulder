@@ -6,7 +6,6 @@ import { Tool } from "@/utils/nocodb";
 import { MagicCard } from "@/components/magicui";
 import ShinyButton from "@/components/magicui/shiny-button";
 import Image from "next/image";
-import ToolFilters from "@/components/ToolFilters";
 
 interface ToolGridProps {
   tools: Tool[];
@@ -16,10 +15,7 @@ interface ToolGridProps {
 }
 
 export default function ToolGrid({ 
-  tools, 
-  onSearchChange, 
-  onCategoryChange, 
-  selectedCategory 
+  tools 
 }: ToolGridProps) {
   const router = useRouter();
 

@@ -13,10 +13,10 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>
-        <title>OpenAutoma - Outils d'IA et Automatisation</title>
+        <title>OpenAutoma - Outils d&apos;IA et Automatisation</title>
         <meta 
           name="description" 
-          content="Découvrez les meilleurs outils d'IA et solutions no-code pour automatiser votre travail." 
+          content="Découvrez les meilleurs outils d&apos;IA et solutions no-code pour automatiser votre travail." 
         />
       </head>
       <body>
