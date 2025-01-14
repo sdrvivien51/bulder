@@ -1,78 +1,98 @@
 import { notFound } from "next/navigation"
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
-import TableOfContents from "@/components/TableOfContents"
 import { Clock, Calendar } from "lucide-react"
-import { getBlogPostBySlug } from "@/utils/nocodb"
+import { getBlogPostBySlug, BlogPost } from "@/utils/nocodb"
 import { getAllBlogPosts } from "@/utils/nocodb"
 import { Separator } from "@/components/ui/separator"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 import ShareButtons from "@/components/ShareButtons"
 import RelatedPosts from "@/components/RelatedPosts"
+import TableOfContents from "@/components/TableOfContents"
 import {
   Breadcrumb,
   BreadcrumbList,
   BreadcrumbItem,
   BreadcrumbLink,
-  BreadcrumbSeparator
-} from '@/components/ui/breadcrumb'
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 
-interface BlogPostProps {
-  params: {
-    slug: string
-  }
+// Interface pour les articles liés
+interface RelatedPost {
+  slug: string
+  title: string
+  excerpt: string
+  coverImage: string
+  date: string
+  category: string
 }
-function addIdsToHeadings(htmlContent: string): string {
-  return htmlContent.replace(
-    /<h([23])[^>]*>(.*?)<\/h\1>/g,
-    (match, level, content) => {
-      const id = content
+
+interface TableOfContentsItem {
+  id: string
+  text: string
+  level: number
+}
+
+// Fonction pour ajouter des IDs aux titres
+function addIdsToHeadings(content: string): { 
+  contentWithIds: string
+  tableOfContents: TableOfContentsItem[]
+} {
+  const toc: TableOfContentsItem[] = []
+  
+  // Remplacer les balises h2-h4 avec des IDs
+  const contentWithIds = content.replace(
+    /<h([2-3])>([^<]+)<\/h[2-4]>/g,
+    (match, level, text) => {
+      const id = text
         .toLowerCase()
-        .replace(/<[^>]+>/g, '') // Enlever les balises HTML
-        .replace(/[^a-z0-9]+/g, '-') // Remplacer les caractères spéciaux par des tirets
-        .replace(/^-+|-+$/g, ''); // Enlever les tirets au début et à la fin
-      
-      return `<h${level} id="${id}">${content}</h${level}>`;
+        .trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "")
+
+      toc.push({
+        id,
+        text: text.trim(),
+        level: parseInt(level, 10)
+      })
+
+      return `<h${level} id="${id}">${text}</h${level}>`
     }
-  );
+  )
+
+  return { contentWithIds, tableOfContents: toc }
 }
 
-export default async function BlogPost({ params }: BlogPostProps) {
+export default async function BlogPostPage({ params }: { params: { slug: string } }) {
   const post = await getBlogPostBySlug(params.slug)
-  const allPosts = await getAllBlogPosts() // Récupérer tous les posts
+  const allPosts = await getAllBlogPosts()
 
   if (!post) {
     notFound()
   }
 
-  // Extraction du contenu du body si nécessaire
-  const contentMatch = post.content.match(/<body[^>]*>([\s\S]*)<\/body>/i)
-  const content = contentMatch ? contentMatch[1] : post.content
-
-  const wordCount = content.replace(/<[^>]+>/g, '').split(/\s+/).length
+  const wordCount = post.content.replace(/<[^>]+>/g, "").split(/\s+/).length
   const readingTime = Math.ceil(wordCount / 200)
 
-  // Filtrer les articles connexes :
-  // - Même catégorie
-  // - Exclure l'article courant
-  // - Limiter à 3 articles
+  // Ajouter les IDs aux titres et générer la table des matières
+  const { contentWithIds, tableOfContents } = addIdsToHeadings(post.content)
+
+  // Récupération des articles liés avec le typage correct
   const relatedPosts = allPosts
-    .filter((relatedPost: any) => 
-      relatedPost.slug !== params.slug && // Exclure l'article courant
-      relatedPost.category === post.category // Même catégorie
+    .filter((relatedPost: BlogPost) => 
+      relatedPost.slug !== params.slug && 
+      relatedPost.category === post.category
     )
-    .slice(0, 3) // Limiter à 3 articles
-    .map((relatedPost: any) => ({
+    .slice(0, 3)
+    .map((relatedPost: BlogPost): RelatedPost => ({
       slug: relatedPost.slug,
       title: relatedPost.title,
-      excerpt: relatedPost.content.substring(0, 150).replace(/<[^>]*>/g, '') + '...', // Extraire un court extrait du contenu HTML
-      coverImage: relatedPost.coverImage,
-      date: new Date().toISOString(), // À adapter selon votre structure de données
+      excerpt: relatedPost.content.substring(0, 150).replace(/<[^>]*>/g, "") + "...",
+      coverImage: relatedPost.banner_url,
+      date: relatedPost.date || new Date().toISOString(),
       category: relatedPost.category
     }))
-
-  const contentWithIds = addIdsToHeadings(content);
 
   return (
     <article className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -134,45 +154,36 @@ export default async function BlogPost({ params }: BlogPostProps) {
 
         <Separator className="my-8" />
 
-        {/* Content container avec marges réduites */}
-        <div className="grid grid-cols-1 lg:grid-cols-[250px_1px_1fr] gap-8">
-          {/* Table of contents */}
-          <aside className="lg:col-span-1">
-            <div className="sticky top-8">
-              <TableOfContents />
-            </div>
-          </aside>
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_250px] gap-8">
+          <main className="prose prose-lg dark:prose-invert max-w-none">
+            <div dangerouslySetInnerHTML={{ __html: contentWithIds }} />
+          </main>
 
-          <Separator orientation="vertical" className="hidden lg:block" />
-
-          <div className="space-y-12">
-            {/* Contenu principal de l'article */}
-            <main className="prose prose-lg dark:prose-invert max-w-none lg:pl-6">
-              <div dangerouslySetInnerHTML={{ __html: contentWithIds }} />
-            </main>
-
-            {/* Articles similaires en dehors du main */}
-            {relatedPosts.length > 0 && (
-              <RelatedPosts posts={relatedPosts} />
+          <aside className="hidden lg:block">
+            {tableOfContents.length > 0 && (
+              <div className="sticky top-8">
+                <TableOfContents items={tableOfContents} />
+              </div>
             )}
-          </div>
+          </aside>
         </div>
+
+        {relatedPosts.length > 0 && (
+          <RelatedPosts posts={relatedPosts} />
+        )}
       </div>
     </article>
   )
 }
 
-// Génération des chemins statiques pour les articles
 export async function generateStaticParams() {
   try {
-    const { getAllBlogPosts } = await import('@/utils/nocodb')
     const posts = await getAllBlogPosts()
-    
-    return posts.map((post) => ({
+    return posts.map((post: BlogPost) => ({
       slug: post.slug,
     }))
   } catch (error) {
-    console.error('Error generating static params:', error)
+    console.error("Error generating static params:", error)
     return []
   }
 }

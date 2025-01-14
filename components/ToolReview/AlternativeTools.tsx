@@ -3,23 +3,13 @@
 import Image from "next/image"
 import { Card, CardHeader, CardTitle, CardDescription } from "../ui/card"
 import Link from "next/link"
-import { Tool } from "@/utils/nocodb"
+import { Tool as NocoTool } from "@/utils/nocodb"
 import { Icons } from "@/components/icons"
 import { Badge } from "@/components/ui/badge"
 import ShineBorder from "@/components/magicui/shine-border"
 
-interface Tool {
-  Id: string
-  name: string
-  description: string
-  logo?: string
-  slug: string
-  rating: number
-  categories: string
-}
-
 interface AlternativeToolsProps {
-  tools: Tool[]
+  tools: NocoTool[]
   adBanner?: {
     image: string
     link: string

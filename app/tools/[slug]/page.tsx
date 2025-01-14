@@ -1,4 +1,4 @@
-import { getToolBySlug } from "@/utils/nocodb"
+import { getToolBySlug, Tool } from "@/utils/nocodb"
 import ToolReviewHeader from "@/components/ToolReview/ToolReviewHeader"
 import ToolReviewContent from "@/components/ToolReview/ToolReviewContent"
 import ToolReviewGallery from "@/components/ToolReview/ToolReviewGallery"
@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 // Ajoutez une fonction pour récupérer les outils alternatifs
-async function getAlternativeTools(currentToolId: string, category: string) {
+async function getAlternativeTools(currentToolId: string, category: string): Promise<Tool[]> {
   try {
     const { getTools } = await import("@/utils/nocodb");
     const allTools = await getTools();
@@ -82,7 +82,7 @@ export default async function ToolPage({ params }: { params: { slug: string } })
       throw new Error('Tool data is incomplete');
     }
     // Récupération des alternatives avec gestion d'erreur
-    let alternativeTools: Array<Tool> = [];
+    let alternativeTools: Tool[] = [];
     try {
       alternativeTools = await getAlternativeTools(tool.Id.toString(), tool.categories);
       console.log('Alternative tools found:', alternativeTools.length);

@@ -1,19 +1,20 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useMotionTemplate, useSpring } from "framer-motion";
+import { motion, useMotionTemplate, useSpring, HTMLMotionProps } from "framer-motion";
 
-interface MagicCardProps extends React.HTMLAttributes<HTMLDivElement> {
+interface MagicCardProps extends HTMLMotionProps<"div"> {
   children: React.ReactNode;
   gradientColor?: string;
   gradientSize?: number;
   gradientFrom?: string;
   gradientTo?: string;
+  className?: string;
 }
 
 export function MagicCard({
   children,
-  className,
+  className = "",
   gradientColor = "rgba(255,255,255,0.2)",
   gradientSize = 250,
   gradientFrom,
@@ -26,7 +27,7 @@ export function MagicCard({
   const mouseX = useSpring(0, { stiffness: 500, damping: 100 });
   const mouseY = useSpring(0, { stiffness: 500, damping: 100 });
 
-  function onMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent) {
+  function onMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent<HTMLDivElement>) {
     const { left, top } = currentTarget.getBoundingClientRect();
     setPosition({ x: clientX - left, y: clientY - top });
     mouseX.set(clientX - left);
@@ -34,25 +35,31 @@ export function MagicCard({
   }
 
   const maskImage = useMotionTemplate`radial-gradient(${gradientSize}px circle at ${mouseX}px ${mouseY}px, ${gradientColor}, transparent)`;
-  const style = { maskImage, WebkitMaskImage: maskImage };
+  const backgroundImage = useMotionTemplate`radial-gradient(circle at ${position.x}px ${position.y}px, ${gradientFrom || "transparent"}, ${gradientTo || "transparent"})`;
 
   return (
-    <div
+    <motion.div
       ref={ref}
       onMouseMove={onMouseMove}
       className={`relative overflow-hidden ${className}`}
       {...props}
     >
-      <div className="pointer-events-none absolute inset-0 z-10 transition-colors duration-500" style={style} />
+      <motion.div 
+        className="pointer-events-none absolute inset-0 z-10 transition-colors duration-500"
+        style={{
+          WebkitMaskImage: maskImage,
+          maskImage: maskImage
+        }}
+      />
       {gradientFrom && gradientTo && (
-        <div
+        <motion.div
           className="pointer-events-none absolute inset-0 z-0"
           style={{
-            background: `radial-gradient(circle at ${position.x}px ${position.y}px, ${gradientFrom}, ${gradientTo})`,
+            backgroundImage
           }}
         />
       )}
       {children}
-    </div>
+    </motion.div>
   );
 } 

@@ -29,7 +29,9 @@ export default function ToolGrid({
               key={tool.Id}
               gradientSize={400}
               gradientColor="rgba(80, 70, 230, 0.15)"
-              className="relative group overflow-hidden rounded-xl border border-border/50 bg-background/50 backdrop-blur-sm transition-all duration-300 hover:shadow-lg"
+              gradientFrom="rgba(80, 70, 230, 0.05)"
+              gradientTo="rgba(255, 255, 255, 0)"
+              className="relative group overflow-hidden rounded-xl border border-border/50 bg-background/50 backdrop-blur-sm transition-all duration-300 hover:border-border/80"
             >
               <div className="relative z-20 flex flex-col p-6 h-full">
                 {/* En-tête avec logo et titre */}
@@ -84,9 +86,6 @@ export default function ToolGrid({
                   </ShinyButton>
                 </div>
               </div>
-              
-              {/* Ajout d'un gradient de fond */}
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </MagicCard>
           ))
         ) : (

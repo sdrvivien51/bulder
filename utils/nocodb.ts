@@ -14,7 +14,7 @@ const nocodbClient = axios.create({
 });
 
 export interface Tool {
-  Id: number;
+  Id: string;
   name: string;
   rating: number;
   tagline: string;
@@ -24,19 +24,27 @@ export interface Tool {
   website: string;
   image: string[] | null;
   logo: string | null;
-  FAQ: string[];
+  FAQ: Array<{
+    question: string;
+    answer: string;
+  }>;
   categories: string;
   pricing: string;
   slug: string;
   youtube_url?: string[];
+  source_url?: string[];
+  banner_url?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-interface BlogPost {
-  Title: string;
+export interface BlogPost {
   content: string;
   slug: string;
   banner_url: string;
-  categorie: string;
+  category: string;
+  date?: string;
+  title: string;
   faq: string[];
   strucured_schema: string[];
   created_at?: string;
@@ -155,10 +163,10 @@ export async function getAllBlogPosts() {
       }
 
       return {
-        title: post.Title,
+        title: post.title,
         content: post.content,
         banner_url: banner_url, // Utilisation du banner_url traité
-        category: post.categorie,
+        category: post.category,
         slug: post.slug,
         date: post.created_at || new Date().toISOString(),
       };
