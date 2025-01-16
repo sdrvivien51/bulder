@@ -1,11 +1,23 @@
 import axios from 'axios';
 import { z } from 'zod';
 
-const NOCODB_API_URL = process.env.NEXT_PUBLIC_NOCODB_API_URL || 'https://app.nocodb.com/api/v2';
+const NOCODB_API_URL = process.env.NEXT_PUBLIC_NOCODB_API_URL;
 const NOCODB_API_TOKEN = process.env.NEXT_PUBLIC_NOCODB_API_TOKEN;
 const BLOG_TABLE_ID = process.env.NEXT_PUBLIC_BLOG_TABLE_ID;
 const TOOLS_TABLE_ID = process.env.NEXT_PUBLIC_TOOLS_TABLE_ID;
-const VIEW_ID = process.env.NEXT_PUBLIC_VIEW_ID;
+const BLOG_VIEW_ID = process.env.NEXT_PUBLIC_BLOG_VIEW_ID;
+const TOOLS_VIEW_ID = process.env.NEXT_PUBLIC_TOOLS_VIEW_ID;
+
+// Vérification des variables
+if (!NOCODB_API_URL || !NOCODB_API_TOKEN) {
+  console.error('Variables d\'environnement NocoDB manquantes:', {
+    apiUrl: !!NOCODB_API_URL,
+    apiToken: !!NOCODB_API_TOKEN,
+    blogTableId: !!BLOG_TABLE_ID,
+    toolsTableId: !!TOOLS_TABLE_ID
+  });
+  throw new Error('Configuration NocoDB incomplète');
+}
 
 // Configuration Axios
 const nocodbClient = axios.create({
@@ -81,7 +93,7 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
     const response = await nocodbClient.get(`/tables/${BLOG_TABLE_ID}/records`, {
       params: {
         where: `(slug,eq,${slug})`,
-        viewId: VIEW_ID
+        viewId: BLOG_VIEW_ID
       }
     });
 
@@ -110,8 +122,8 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
       updated_at: postData.updated_at || undefined,
     };
   } catch (error) {
-    console.error('Erreur lors de la récupération de l\'article de blog :', error);
-    throw new Error('Échec de la récupération de l\'article de blog');
+    console.error('Erreur lors de la récupération du post:', error);
+    return null;
   }
 }
 
@@ -119,13 +131,13 @@ export async function getAllBlogPosts(): Promise<BlogPost[]> {
   try {
     console.log('Fetching blog posts with:', {
       tableId: BLOG_TABLE_ID,
-      viewId: VIEW_ID
+      viewId: BLOG_VIEW_ID
     });
 
     const response = await nocodbClient.get(`/tables/${BLOG_TABLE_ID}/records`, {
       params: {
         limit: 100,
-        viewId: VIEW_ID,
+        viewId: BLOG_VIEW_ID,
       }
     });
 
@@ -168,7 +180,7 @@ export async function getTools(): Promise<Tool[]> {
     const response = await nocodbClient.get(`/tables/${TOOLS_TABLE_ID}/records`, {
       params: {
         limit: 100,
-        viewId: VIEW_ID,
+        viewId: TOOLS_VIEW_ID,
       }
     });
 
@@ -258,9 +270,8 @@ export async function getToolBySlug(slug: string): Promise<Tool | null> {
 
     const response = await nocodbClient.get(`/tables/${TOOLS_TABLE_ID}/records`, {
       params: {
-        limit: 1,
-        viewId: VIEW_ID,
-        where: `(slug,eq,${slug})`
+        where: `(slug,eq,${slug})`,
+        viewId: TOOLS_VIEW_ID
       }
     });
 
@@ -304,7 +315,7 @@ export async function getToolBySlug(slug: string): Promise<Tool | null> {
 
     return transformedTool;
   } catch (error) {
-    console.error('Erreur détaillée lors de la récupération de l\'outil par slug:', error);
-    throw error;
+    console.error('Erreur lors de la récupération de l\'outil:', error);
+    return null;
   }
 } 
