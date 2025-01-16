@@ -1,12 +1,12 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { motion, useMotionTemplate, useSpring, HTMLMotionProps } from "framer-motion";
+import { motion, useMotionTemplate, useSpring } from "framer-motion";
 
-interface MagicCardProps extends HTMLMotionProps<"div"> {
+interface MagicCardProps {
   children: React.ReactNode;
-  gradientColor?: string;
   gradientSize?: number;
+  gradientColor?: string;
   gradientFrom?: string;
   gradientTo?: string;
   className?: string;

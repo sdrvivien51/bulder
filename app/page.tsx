@@ -1,60 +1,62 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import { getTools } from "@/utils/nocodb";
-import { Tool } from "@/utils/nocodb";
+import { getTools, Tool } from "@/utils/nocodb";
 import ToolGrid from '@/components/ToolGrid';
 import ToolFilters from '@/components/ToolFilters';
 import Hero from '@/components/Hero';
 
-export default function Home() {
+export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("tous");
   const [tools, setTools] = useState<Tool[]>([]);
+  const [filteredTools, setFilteredTools] = useState<Tool[]>([]);
 
+  // Récupérer les outils au chargement initial
   useEffect(() => {
     const fetchTools = async () => {
       const fetchedTools = await getTools();
       setTools(fetchedTools);
+      setFilteredTools(fetchedTools);
     };
     fetchTools();
   }, []);
 
-  const filteredTools = tools.filter((tool) => {
-    const matchesSearch = 
-      tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tool.description.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesCategory = 
-      selectedCategory === "tous" || 
-      tool.categories.toLowerCase() === selectedCategory.toLowerCase();
+  // Filtrer les outils en fonction de la recherche et de la catégorie
+  useEffect(() => {
+    const filtered = tools.filter((tool) => {
+      // Vérification de l'existence des propriétés
+      const toolName = tool?.name || '';
+      const toolDescription = tool?.description || '';
+      const toolCategories = tool?.categories || '';
 
-    return matchesSearch && matchesCategory;
-  });
+      const matchesSearch = searchQuery === '' || (
+        toolName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        toolDescription.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      
+      const matchesCategory = 
+        selectedCategory === 'tous' || toolCategories === selectedCategory;
+
+      return matchesSearch && matchesCategory;
+    });
+
+    setFilteredTools(filtered);
+  }, [searchQuery, selectedCategory, tools]);
 
   return (
-    <main>
-      {/* Hero Section */}
+    <>
       <Hero />
-
-      {/* Tools Section */}
-      <section className="container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 gap-8">
-          <ToolFilters
-            onSearchChange={setSearchQuery}
-            onCategoryChange={setSelectedCategory}
-            selectedCategory={selectedCategory}
-          />
-
-          <ToolGrid 
-            tools={filteredTools}
-            onSearchChange={setSearchQuery}
-            onCategoryChange={setSelectedCategory}
-            selectedCategory={selectedCategory}
-          />
-        </div>
-      </section>
-    </main>
+      <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <h1 className="text-4xl font-bold mb-8">Nos Services</h1>
+        <ToolFilters 
+          onSearchChange={setSearchQuery}
+          onCategoryChange={setSelectedCategory}
+          selectedCategory={selectedCategory}
+        />
+        <ToolGrid tools={filteredTools} />
+      </div>
+    </>
   );
 }
 

@@ -3,34 +3,56 @@
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Tool } from "@/utils/nocodb";
-import { MagicCard } from "@/components/magicui";
+import dynamic from 'next/dynamic';
 import ShinyButton from "@/components/magicui/shiny-button";
 import Image from "next/image";
+import { useTheme } from "next-themes";
+
+// Import dynamique de MagicCard
+const DynamicMagicCard = dynamic(
+  () => import('@/components/magicui').then(mod => mod.MagicCard),
+  { ssr: false }
+);
 
 interface ToolGridProps {
   tools: Tool[];
-  onSearchChange: (value: string) => void;
-  onCategoryChange: (value: string) => void;
-  selectedCategory: string;
+  onSearchChange?: (value: string) => void;
+  onCategoryChange?: (value: string) => void;
+  selectedCategory?: string;
 }
 
-export default function ToolGrid({ 
-  tools 
-}: ToolGridProps) {
+export default function ToolGrid({ tools }: ToolGridProps) {
   const router = useRouter();
+  const { theme } = useTheme();
+
+  // Définir les couleurs du gradient en fonction du thème
+  const gradientColors = {
+    light: {
+      gradientColor: "rgba(0, 0, 0, 0.1)",
+      gradientFrom: "rgba(0, 0, 0, 0.05)",
+      gradientTo: "rgba(255, 255, 255, 0)"
+    },
+    dark: {
+      gradientColor: "rgba(139, 92, 246, 0.15)", // Violet plus prononcé
+      gradientFrom: "rgba(139, 92, 246, 0.05)",
+      gradientTo: "rgba(0, 0, 0, 0)"
+    }
+  };
+
+  // Sélectionner les couleurs en fonction du thème actuel
+  const currentGradient = theme === 'dark' ? gradientColors.dark : gradientColors.light;
 
   return (
     <div className="space-y-6">
-      {/* Tools Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {tools && tools.length > 0 ? (
           tools.map((tool) => (
-            <MagicCard
-              key={tool.Id}
+            <DynamicMagicCard
+              key={tool.id}
               gradientSize={400}
-              gradientColor="rgba(80, 70, 230, 0.15)"
-              gradientFrom="rgba(80, 70, 230, 0.05)"
-              gradientTo="rgba(255, 255, 255, 0)"
+              gradientColor={currentGradient.gradientColor}
+              gradientFrom={currentGradient.gradientFrom}
+              gradientTo={currentGradient.gradientTo}
               className="relative group overflow-hidden rounded-xl border border-border/50 bg-background/50 backdrop-blur-sm transition-all duration-300 hover:border-border/80"
             >
               <div className="relative z-20 flex flex-col p-6 h-full">
@@ -86,7 +108,7 @@ export default function ToolGrid({
                   </ShinyButton>
                 </div>
               </div>
-            </MagicCard>
+            </DynamicMagicCard>
           ))
         ) : (
           <div className="col-span-full text-center text-muted-foreground">

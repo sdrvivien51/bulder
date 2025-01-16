@@ -1,3 +1,4 @@
+import dynamic from 'next/dynamic';
 import { notFound } from "next/navigation"
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
@@ -7,23 +8,29 @@ import { getAllBlogPosts } from "@/utils/nocodb"
 import { Separator } from "@/components/ui/separator"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
-import ShareButtons from "@/components/ShareButtons"
-import RelatedPosts from "@/components/RelatedPosts"
-import TableOfContents from "@/components/TableOfContents"
+import ScrollProgress from "@/components/magicui/scroll-progress"
+import { Metadata } from 'next'
+
+// Import dynamique des composants problématiques
+const ShareButtons = dynamic(() => import('@/components/ShareButtons'), { ssr: false });
+const RelatedPosts = dynamic(() => import('@/components/RelatedPosts'), { ssr: false });
+const TableOfContents = dynamic(() => import('@/components/TableOfContents'), { ssr: false });
+
+// Import des composants Breadcrumb (Client Components)
 import {
   Breadcrumb,
   BreadcrumbList,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
+} from "@/components/ui/breadcrumb";
 
 // Interface pour les articles liés
 interface RelatedPost {
   slug: string
   title: string
   excerpt: string
-  coverImage: string
+  banner_url: string
   date: string
   category: string
 }
@@ -89,90 +96,96 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
       slug: relatedPost.slug,
       title: relatedPost.title,
       excerpt: relatedPost.content.substring(0, 150).replace(/<[^>]*>/g, "") + "...",
-      coverImage: relatedPost.banner_url,
+      banner_url: relatedPost.banner_url,
       date: relatedPost.date || new Date().toISOString(),
       category: relatedPost.category
     }))
 
   return (
-    <article className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/">Accueil</BreadcrumbLink>
-            <BreadcrumbSeparator />
-          </BreadcrumbItem>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/blog">Blog</BreadcrumbLink>
-            <BreadcrumbSeparator />
-          </BreadcrumbItem>
-          <BreadcrumbItem>
-            <span className="font-normal text-foreground">{post.title}</span>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-      {/* Image banner */}
-      <div className="relative w-full h-[400px] mb-8">
-        <Image
-          src={post.coverImage}
-          alt={post.title}
-          fill
-          className="object-cover rounded-xl"
-          priority
-        />
-      </div>
+    <>
+      <ScrollProgress className="top-[64px]" />
+      <article className="container mx-auto px-4 sm:px-6 lg:px-8 pt-[80px]">
+        <div className="my-6">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href="/">Accueil</BreadcrumbLink>
+                <BreadcrumbSeparator>/</BreadcrumbSeparator>
+              </BreadcrumbItem>
+              <BreadcrumbItem>
+                <BreadcrumbLink href="/blog">Blog</BreadcrumbLink>
+                <BreadcrumbSeparator>/</BreadcrumbSeparator>
+              </BreadcrumbItem>
+              <BreadcrumbItem>
+                <span className="font-normal text-muted-foreground">{post.title}</span>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
 
-      {/* Header - Maintenant aligné avec le contenu principal */}
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-4">{post.title}</h1>
-          
-          {/* Meta information row */}
-          <div className="flex flex-wrap gap-4 items-center text-sm text-muted-foreground mb-4">
-            <div className="flex items-center">
-              <Clock className="w-4 h-4 mr-2" />
-              <span>{readingTime} min de lecture</span>
+        {/* Image banner */}
+        <div className="relative w-full h-[400px] mb-8">
+          <Image
+            src={post.banner_url}
+            alt={post.title}
+            fill
+            className="object-cover rounded-xl"
+            priority
+          />
+        </div>
+
+        {/* Header - Maintenant aligné avec le contenu principal */}
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold mb-4">{post.title}</h1>
+            
+            {/* Meta information row */}
+            <div className="flex flex-wrap gap-4 items-center text-sm text-muted-foreground mb-4">
+              <div className="flex items-center">
+                <Clock className="w-4 h-4 mr-2" />
+                <span>{readingTime} min de lecture</span>
+              </div>
+              
+              <Separator orientation="vertical" className="h-4" />
+              
+              <div className="flex items-center">
+                <Calendar className="w-4 h-4 mr-2" />
+                <span>Publié le {format(new Date(post.date), 'dd MMMM yyyy', { locale: fr })}</span>
+              </div>
+              
+              <Separator orientation="vertical" className="h-4" />
+              
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">{post.category}</Badge>
+              </div>
             </div>
-            
-            <Separator orientation="vertical" className="h-4" />
-            
-            <div className="flex items-center">
-              <Calendar className="w-4 h-4 mr-2" />
-              <span>Publié le {format(new Date(), 'dd MMMM yyyy', { locale: fr })}</span>
-            </div>
-            
-            <Separator orientation="vertical" className="h-4" />
-            
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary">{post.category}</Badge>
-            </div>
+
+            {/* Share buttons */}
+            <ShareButtons />
           </div>
 
-          {/* Share buttons */}
-          <ShareButtons />
+          <Separator className="my-8" />
+
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_250px] gap-8">
+            <main className="prose prose-lg dark:prose-invert max-w-none">
+              <div dangerouslySetInnerHTML={{ __html: contentWithIds }} />
+            </main>
+
+            <aside className="hidden lg:block">
+              {tableOfContents.length > 0 && (
+                <div className="sticky top-8">
+                  <TableOfContents items={tableOfContents} />
+                </div>
+              )}
+            </aside>
+          </div>
+
+          {relatedPosts.length > 0 && (
+            <RelatedPosts posts={relatedPosts} />
+          )}
         </div>
-
-        <Separator className="my-8" />
-
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_250px] gap-8">
-          <main className="prose prose-lg dark:prose-invert max-w-none">
-            <div dangerouslySetInnerHTML={{ __html: contentWithIds }} />
-          </main>
-
-          <aside className="hidden lg:block">
-            {tableOfContents.length > 0 && (
-              <div className="sticky top-8">
-                <TableOfContents items={tableOfContents} />
-              </div>
-            )}
-          </aside>
-        </div>
-
-        {relatedPosts.length > 0 && (
-          <RelatedPosts posts={relatedPosts} />
-        )}
-      </div>
-    </article>
+      </article>
+    </>
   )
 }
 
@@ -187,3 +200,29 @@ export async function generateStaticParams() {
     return []
   }
 }
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const post = await getBlogPostBySlug(params.slug)
+  
+  if (!post) {
+    return {
+      title: 'Article non trouvé',
+      description: 'L\'article que vous recherchez n\'existe pas.'
+    }
+  }
+
+  return {
+    title: post.title,
+    description: post.metadescription,
+    openGraph: {
+      title: post.title,
+      description: post.metadescription,
+      images: [post.banner_url],
+      type: 'article',
+      publishedTime: post.created_at,
+      modifiedTime: post.updated_at,
+      authors: ['OpenAutoma'],
+    },
+  }
+}
+

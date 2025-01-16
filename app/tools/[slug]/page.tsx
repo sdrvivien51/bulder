@@ -1,4 +1,4 @@
-import { getToolBySlug, Tool } from "@/utils/nocodb"
+import { getTools, getToolBySlug, Tool } from "@/utils/nocodb"
 import ToolReviewHeader from "@/components/ToolReview/ToolReviewHeader"
 import ToolReviewContent from "@/components/ToolReview/ToolReviewContent"
 import ToolReviewGallery from "@/components/ToolReview/ToolReviewGallery"
@@ -6,17 +6,7 @@ import AlternativeTools from "@/components/ToolReview/AlternativeTools"
 import { notFound } from "next/navigation"
 import { Metadata } from "next"
 import ToolReviewFAQ from "@/components/ToolReview/ToolReviewFAQ"
-
-interface FAQItem {
-  question: string;
-  answer: string;
-}
-
-interface RawFAQItem {
-  question: string;
-  answer: string;
-}
-
+import JsonLd from "@/components/JsonLd"
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   try {
@@ -42,17 +32,33 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   }
 }
 
-// Ajoutez une fonction pour récupérer les outils alternatifs
-async function getAlternativeTools(currentToolId: string, category: string): Promise<Tool[]> {
+// Fonction helper pour récupérer les alternatives
+async function getAlternativeTools(currentTool: Tool): Promise<Tool[]> {
   try {
-    const { getTools } = await import("@/utils/nocodb");
     const allTools = await getTools();
-    return allTools
-      .filter(tool => 
-        tool.Id.toString() !== currentToolId && 
-        tool.categories.toLowerCase().includes(category.toLowerCase())
-      )
-      .slice(0, 3);
+    console.log('Fetching alternatives for:', {
+      currentToolId: currentTool.id,
+      currentToolCategory: currentTool.categories,
+      currentToolSlug: currentTool.slug
+    });
+
+    // Filtrer les alternatives
+    const alternatives = allTools.filter(altTool => {
+      const isSameCategory = altTool.categories.toLowerCase() === currentTool.categories.toLowerCase();
+      const isDifferentTool = altTool.slug !== currentTool.slug;
+
+      console.log('Comparing tool:', {
+        toolSlug: altTool.slug,
+        toolCategory: altTool.categories,
+        isSameCategory,
+        isDifferentTool
+      });
+
+      return isSameCategory && isDifferentTool;
+    });
+
+    console.log(`Found ${alternatives.length} alternatives`);
+    return alternatives.slice(0, 3);
   } catch (error) {
     console.error('Error fetching alternative tools:', error);
     return [];
@@ -61,120 +67,113 @@ async function getAlternativeTools(currentToolId: string, category: string): Pro
 
 export default async function ToolPage({ params }: { params: { slug: string } }) {
   try {
-    // Ajout de logs pour déboguer
-    console.log('Fetching tool with slug:', params.slug);
-    
     const tool = await getToolBySlug(params.slug);
-    console.log('Tool data received:', tool);
-
+    
     if (!tool) {
-      console.log('Tool not found, redirecting to 404');
       notFound();
     }
 
-    // Log pour vérifier les données avant de récupérer les alternatives
-    console.log('Tool categories:', tool.categories);
-    console.log('Tool ID:', tool.Id);
+    // Récupérer les alternatives en utilisant l'outil actuel
+    const alternativeTools = await getAlternativeTools(tool);
+    console.log('Alternative tools:', alternativeTools);
 
-    // Vérification des données requises
-    if (!tool.categories || !tool.Id) {
-      console.error('Missing required tool data:', { categories: tool.categories, id: tool.Id });
-      throw new Error('Tool data is incomplete');
-    }
-    // Récupération des alternatives avec gestion d'erreur
-    let alternativeTools: Tool[] = [];
-    try {
-      alternativeTools = await getAlternativeTools(tool.Id.toString(), tool.categories);
-      console.log('Alternative tools found:', alternativeTools.length);
-    } catch (alternativesError) {
-      console.error('Error fetching alternatives:', alternativesError);
-      // On continue même si la récupération des alternatives échoue
-    }
-
-    // Ajouter des logs pour déboguer
-    console.log('Raw FAQ data:', tool.FAQ);
-
-    const formattedFaqs: FAQItem[] = [];
-    if (tool.FAQ && Array.isArray(tool.FAQ)) {
-      console.log('FAQ is an array with length:', tool.FAQ.length);
-      
-      tool.FAQ.forEach((faqItem) => {
-        console.log('Processing FAQ item:', faqItem);
-        
-        if (faqItem && typeof faqItem === 'object' && 'question' in faqItem && 'answer' in faqItem) {
-          const { question, answer } = faqItem as RawFAQItem;
-          formattedFaqs.push({
-            question: question || 'Question non disponible',
-            answer: answer || 'Réponse non disponible',
-          });
+    // Schema pour le produit
+    const productSchema = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": tool.name,
+      "description": tool.description,
+      "image": tool.banner_url,
+      "brand": {
+        "@type": "Brand",
+        "name": tool.name
+      },
+      ...(tool.rating && {
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": tool.rating,
+          "bestRating": "5",
+          "worstRating": "1",
+          "ratingCount": "1"
         }
-      });
+      }),
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR",
+        "availability": "https://schema.org/InStock",
+        "url": tool.website
+      }
     }
 
-    console.log('Formatted FAQs:', formattedFaqs);
+    // Schema pour la FAQ si elle existe
+    const faqSchema = tool.FAQ && tool.FAQ.length > 0 ? {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": tool.FAQ.map(item => ({
+        "@type": "Question",
+        "name": item.question,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": item.answer
+        }
+      }))
+    } : null
 
     return (
-      <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8 pl-0 sm:pl-4 lg:pl-6">
-            <ToolReviewHeader 
-              name={tool.name}
-              rating={tool.rating}
-              categories={tool.categories}
-              pricing={tool.pricing}
-              logo={tool.logo}
-              website={tool.website}
-              tagline={tool.tagline}
-            />
-            
-            <div className="space-y-8">
-              <ToolReviewContent 
-                description={tool.description}
-                features={[]}
-                pros={tool.advantage || []}
-                cons={tool.inconvenient || []}
-                source_url={tool.source_url || []}
-                videos={tool.youtube_url || []}
+      <>
+        <JsonLd data={productSchema} />
+        {faqSchema && <JsonLd data={faqSchema} />}
+        <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-8 pl-0 sm:pl-4 lg:pl-6">
+              <ToolReviewHeader 
+                name={tool.name}
+                rating={tool.rating || null}
+                categories={tool.categories}
+                pricing={tool.pricing || null}
+                logo={tool.logo || null}
+                website={tool.website || null}
+                tagline={tool.tagline || null}
               />
-              {tool.image && Array.isArray(tool.image) && tool.image.length > 0 && (
-                <ToolReviewGallery images={tool.image} />
-              )}
-              {formattedFaqs.length > 0 ? (
-                <ToolReviewFAQ faqs={formattedFaqs} />
-              ) : (
-                <div className="mt-8">
-                  <h2 className="text-2xl font-bold mb-4">Aucune FAQ disponible</h2>
-                </div>
+              
+              <div className="space-y-8">
+                <ToolReviewContent 
+                  description={tool.description}
+                  features={tool.features}
+                  pros={tool.advantage}
+                  cons={tool.inconvenient}
+                  source_url={tool.source_url}
+                  videos={tool.youtube_url}
+                />
+                {tool.banner_url && (
+                  <ToolReviewGallery images={[tool.banner_url]} />
+                )}
+                {tool.FAQ && tool.FAQ.length > 0 && (
+                  <ToolReviewFAQ faqs={tool.FAQ} />
+                )}
+              </div>
+            </div>
+            
+            {/* Section des outils alternatifs */}
+            <div className="lg:col-span-1 pr-0 sm:pr-4 lg:pr-6">
+              {alternativeTools.length > 0 && (
+                <AlternativeTools 
+                  tools={alternativeTools}
+                  adBanner={{
+                    image: "/ad-banner.jpg",
+                    link: "https://example.com",
+                    altText: "Advertisement"
+                  }}
+                />
               )}
             </div>
           </div>
-          <div className="lg:col-span-1 pr-0 sm:pr-4 lg:pr-6">
-            <AlternativeTools 
-              tools={alternativeTools}
-              adBanner={{
-                image: "/ad-banner.jpg",
-                link: "https://example.com",
-                altText: "Advertisement"
-              }}
-            />
-          </div>
         </div>
-      </div>
-    )
+      </>
+    );
   } catch (error) {
-    // Amélioration de la gestion d'erreur
-    console.error('Detailed error in ToolPage:', {
-      error,
-      slug: params.slug,
-      message: error instanceof Error ? error.message : 'Unknown error'
-    });
-
-    // Si c'est une erreur 404, on utilise notFound()
-    if (error instanceof Error && error.message.includes('not found')) {
-      notFound();
-    }
-
-    // Pour les autres erreurs, on les remonte
+    console.error('Error in ToolPage:', error);
     throw error;
   }
 }

@@ -23,10 +23,10 @@ export default function AlternativeTools({ tools = [], adBanner }: AlternativeTo
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Ad Banner Section */}
       {adBanner && (
-        <div className="rounded-lg overflow-hidden">
+        <div className="rounded-lg overflow-hidden mb-8">
           <Link href={adBanner.link}>
             <Image
               src={adBanner.image}
@@ -41,10 +41,10 @@ export default function AlternativeTools({ tools = [], adBanner }: AlternativeTo
 
       {/* Alternative Tools Section */}
       <div>
-        <h2 className="text-2xl font-bold mb-4">Alternative Tools</h2>
-        <div className="space-y-4">
+        <h2 className="text-2xl font-bold mb-8">Alternative Tools</h2>
+        <div className="flex flex-col gap-8">
           {tools.map((tool) => (
-            <Link href={`/tools/${tool.slug}`} key={tool.Id}>
+            <Link href={`/tools/${tool.slug}`} key={tool.id} className="block">
               <ShineBorder
                 borderRadius={6}
                 duration={14}
@@ -53,7 +53,6 @@ export default function AlternativeTools({ tools = [], adBanner }: AlternativeTo
               >
                 <Card className="bg-transparent border-0 hover:shadow-lg transition-shadow duration-200">
                   <CardHeader className="flex flex-row items-center gap-4 p-4">
-                    {/* Logo avec taille fixe et meilleur rendu */}
                     <div className="relative w-16 h-16 flex-shrink-0">
                       {tool.logo ? (
                         <Image

@@ -7,7 +7,7 @@ interface RelatedPost {
   slug: string
   title: string
   excerpt: string
-  coverImage: string
+  banner_url: string
   date: string
   category: string
 }
@@ -32,7 +32,7 @@ export default function RelatedPosts({ posts }: RelatedPostsProps) {
             <article className="bg-card rounded-lg overflow-hidden border transition-shadow hover:shadow-lg">
               <div className="relative aspect-[16/9] overflow-hidden">
                 <Image
-                  src={post.coverImage}
+                  src={post.banner_url}
                   alt={post.title}
                   fill
                   className="object-cover transition-transform group-hover:scale-105"

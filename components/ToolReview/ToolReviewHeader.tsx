@@ -7,12 +7,12 @@ import PulsatingButton from '../magicui/pulsating-button';
 
 interface ToolReviewHeaderProps {
   name: string;
-  rating: number;
+  rating: number | null;
   categories: string;
-  pricing: string;
+  pricing: string | null;
   logo: string | null;
-  website: string;
-  tagline: string;
+  website: string | null;
+  tagline: string | null;
 }
 
 export default function ToolReviewHeader({
@@ -24,6 +24,8 @@ export default function ToolReviewHeader({
   website,
   tagline
 }: ToolReviewHeaderProps) {
+  const ratingValue = rating ?? 0;
+
   return (
     <div className="flex flex-col gap-4 p-6 bg-background rounded-lg shadow-sm border dark:border-border">
       <div className="flex items-start">
@@ -57,20 +59,22 @@ export default function ToolReviewHeader({
               {categories}
             </Badge>
             <h1 className="text-3xl font-bold text-foreground">{name}</h1>
-            <div className="flex items-center gap-2">
-              <div className="flex">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`w-5 h-5 ${
-                      i < Math.floor(rating)
-                        ? "text-yellow-400 fill-yellow-400"
-                        : "text-gray-300"
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="text-sm text-gray-600">({rating}/5)</span>
+            <div className="flex items-center gap-1">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  className={`w-5 h-5 ${
+                    i < Math.floor(ratingValue)
+                      ? "text-yellow-400 fill-yellow-400"
+                      : "text-gray-300"
+                  }`}
+                />
+              ))}
+              {ratingValue > 0 && (
+                <span className="ml-2 text-sm text-muted-foreground">
+                  {ratingValue.toFixed(1)}
+                </span>
+              )}
             </div>
             <div className="text-lg font-semibold">
               {pricing}
@@ -84,10 +88,11 @@ export default function ToolReviewHeader({
 
       <div className="flex justify-start">
         <PulsatingButton
-          onClick={() => window.open(website, "_blank")}
+          onClick={() => website && window.open(website, "_blank")}
           className="px-4 py-2"
           pulseColor="#3b82f6"
           duration="2s"
+          disabled={!website}
         >
           Visiter le site
         </PulsatingButton>

@@ -20,6 +20,15 @@ const nextConfig = {
       }
     ],
   },
+  env: {
+    NEXT_PUBLIC_NOCODB_URL: process.env.NEXT_PUBLIC_NOCODB_URL,
+    NOCODB_AUTH_TOKEN: process.env.NOCODB_AUTH_TOKEN,
+  },
+  reactStrictMode: true,
+  compiler: {
+    styledComponents: true,
+  },
+  staticPageGenerationTimeout: 0,
 }
 
 module.exports = nextConfig 
