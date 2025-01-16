@@ -8,24 +8,31 @@ const TOOLS_TABLE_ID = process.env.NEXT_PUBLIC_TOOLS_TABLE_ID;
 const BLOG_VIEW_ID = process.env.NEXT_PUBLIC_BLOG_VIEW_ID;
 const TOOLS_VIEW_ID = process.env.NEXT_PUBLIC_TOOLS_VIEW_ID;
 
-// Vérification des variables
+// Vérification des variables d'environnement
 if (!NOCODB_API_URL || !NOCODB_API_TOKEN) {
-  console.error('Variables d\'environnement NocoDB manquantes:', {
+  console.error('Configuration NocoDB manquante:', {
     apiUrl: !!NOCODB_API_URL,
-    apiToken: !!NOCODB_API_TOKEN,
-    blogTableId: !!BLOG_TABLE_ID,
-    toolsTableId: !!TOOLS_TABLE_ID
+    token: !!NOCODB_API_TOKEN
   });
   throw new Error('Configuration NocoDB incomplète');
 }
 
-// Configuration Axios
+// Création du client axios avec le token d'authentification
 const nocodbClient = axios.create({
   baseURL: NOCODB_API_URL,
   headers: {
-    'xc-token': NOCODB_API_TOKEN
+    'xc-token': NOCODB_API_TOKEN,
+    'Accept': 'application/json'
   }
 });
+
+// Ajout d'un intercepteur pour logger les requêtes en développement
+if (process.env.NODE_ENV === 'development') {
+  nocodbClient.interceptors.request.use(request => {
+    console.log('Request Headers:', request.headers);
+    return request;
+  });
+}
 
 // Définir le schéma Zod pour BlogPost
 const BlogPostSchema = z.object({
